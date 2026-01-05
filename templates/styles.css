@@ -1,3 +1,27 @@
 body {
   background-color: #7ba57c; e4e5f7 187e16
 }
+.table-container {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 6px;
+  text-align: center;
+}
+thead th {
+  position: sticky;
+  top: 0;
+  background-color: #e4e5f7; /* simple gray for now */
+}
+input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px;
+}
