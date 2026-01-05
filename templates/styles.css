@@ -1,5 +1,6 @@
 body {
-  background-color: #7ba57c; e4e5f7 187e16
+  background-color: #ffffff;
+  color: #187e16;
 }
 .table-container {
   max-height: 300px;
@@ -9,6 +10,7 @@ body {
 table {
   border-collapse: collapse;
   width: 100%;
+  color: #000000;
 }
 th, td {
   border: 1px solid #ccc;
