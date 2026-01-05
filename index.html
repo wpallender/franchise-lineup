@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FranchiseBall Lineup Helper</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; max-width: 1200px; }
+        textarea { width: 100%; font-family: monospace; margin-bottom: 10px; }
+        h2 { margin-top: 20px; }
+        input[type="submit"] { font-size: 16px; padding: 10px 20px; margin-top: 10px; }
+        .error { color: red; font-weight: bold; margin-bottom: 10px; }
+        .container { display: flex; gap: 20px; }
+        .form-container { flex: 1; }
+        .results-container { flex: 1; border-left: 1px solid #ccc; padding-left: 20px; }
+        .lineup ul, .rotation ul { list-style: none; padding-left: 0; }
+        .lineup li, .rotation li { padding: 3px 0; }
+    </style>
+</head>
+<body>
+    <h1>FranchiseBall Lineup Helper</h1>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <div class="container">
+        <div class="form-container">
+            <form method="post">
+                <h2>My Team Hitters</h2>
+                <p>Paste as header: #	POS	Player	Avg	AB	Hits	SLG	RBI	2B	3B	HR	SB	BB	OBP</p>
+                <textarea name="my_hitters" rows="10" placeholder="Headers: #	POS	Player	Avg	AB	Hits	SLG	RBI	2B	3B	HR	SB	BB	OBP">{{ form_data.my_hitters or "" }}</textarea>
+
+                <h2>My Team Pitchers</h2>
+                <p>Paste as header: #	Player	Win	Loss	Saves	ERA	WHIP	BAA	K	BB	Hits	Runs	IP</p>
+                <textarea name="my_pitchers" rows="5" placeholder="Headers: #	Player	Win	Loss	Saves	ERA	WHIP	BAA	K	BB	Hits	Runs	IP">{{ form_data.my_pitchers or "" }}</textarea>
+
+                <h2>Opponent Hitters</h2>
+                <p>Paste as header: POS	Name	Avg	Hits	HR	RBI	OBP</p>
+                <textarea name="opp_hitters" rows="10" placeholder="Headers: POS	Name	Avg	Hits	HR	RBI	OBP">{{ form_data.opp_hitters or "" }}</textarea>
+
+                <h2>Opponent Pitchers</h2>
+                <p>Paste as header: Name	ERA	WHIP	K	BB</p>
+                <textarea name="opp_pitchers" rows="5" placeholder="Headers: Name	ERA	WHIP	K	BB">{{ form_data.opp_pitchers or "" }}</textarea>
+
+                <br>
+                <input type="submit" value="Generate Lineup">
+            </form>
+        </div>
+
+        <div class="results-container">
+            {% if lineup %}
+                <div class="lineup">
+                    <h2>Suggested Lineup</h2>
+                    <ul>
+                        {% for player in lineup %}
+                            <li>{{ player['POS'] }} - {{ player['Player'] }} (Score: {{ player['Score'] }})</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            {% if rotation %}
+                <div class="rotation">
+                    <h2>Starting Rotation</h2>
+                    <ul>
+                        {% for pitcher in rotation %}
+                            <li>{{ pitcher['Player'] }} - ERA: {{ pitcher['ERA'] }}, WHIP: {{ pitcher['WHIP'] }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
+
+
