@@ -12,98 +12,10 @@
     <p style="color:red;">{{ error }}</p>
     {% endif %}
 
-    <form method="POST">
-        <!-- My Hitters -->
-        <h3>My Hitters</h3>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        {% for col in ["POS","Player","Avg","AB","Hits","SLG","RBI","2B","3B","HR","SB","BB","OBP"] %}
-                        <th>{{ col }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for i in range(12) %}
-                    <tr>
-                        {% for col in ["POS","Player","Avg","AB","Hits","SLG","RBI","2B","3B","HR","SB","BB","OBP"] %}
-                        <td><input type="text" name="my_hitters_{{ col }}_{{ i }}" value="{{ form_data.get('my_hitters_' ~ col ~ '_' ~ i, '') }}"></td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- My Pitchers -->
-        <h3>My Pitchers</h3>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        {% for col in ["Player","Win","Loss","Saves","ERA","WHIP","BAA","K","BB","Hits","Runs","IP"] %}
-                        <th>{{ col }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for i in range(7) %}
-                    <tr>
-                        {% for col in ["Player","Win","Loss","Saves","ERA","WHIP","BAA","K","BB","Hits","Runs","IP"] %}
-                        <td><input type="text" name="my_pitchers_{{ col }}_{{ i }}" value="{{ form_data.get('my_pitchers_' ~ col ~ '_' ~ i, '') }}"></td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Opponent Hitters -->
-        <h3>Opponent Hitters</h3>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        {% for col in ["POS","Name","Avg","Hits","HR","RBI","OBP"] %}
-                        <th>{{ col }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for i in range(9) %}
-                    <tr>
-                        {% for col in ["POS","Name","Avg","Hits","HR","RBI","OBP"] %}
-                        <td><input type="text" name="opp_hitters_{{ col }}_{{ i }}" value="{{ form_data.get('opp_hitters_' ~ col ~ '_' ~ i, '') }}"></td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Opponent Pitchers -->
-        <h3>Opponent Pitchers</h3>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        {% for col in ["Name","ERA","WHIP","K","BB"] %}
-                        <th>{{ col }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for i in range(1) %}
-                    <tr>
-                        {% for col in ["Name","ERA","WHIP","K","BB"] %}
-                        <td><input type="text" name="opp_pitchers_{{ col }}_{{ i }}" value="{{ form_data.get('opp_pitchers_' ~ col ~ '_' ~ i, '') }}"></td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <form method="POST" enctype="multipart/form-data">
+        <h3>Upload FranchiseBall Stats CSV</h3>
+        <p>The CSV should have sections: MY HITTERS, MY PITCHERS, OPP HITTERS, OPP PITCHERS</p>
+        <input type="file" name="stats_file" accept=".csv,.xlsx" required>
 
         <button type="submit">Generate Lineup</button>
     </form>
