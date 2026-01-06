@@ -1,5 +1,7 @@
 from flask import Flask, request, render_template
 from collections import defaultdict
+import pandas as pd
+import io
 
 app = Flask(__name__)
 
@@ -9,7 +11,7 @@ app = Flask(__name__)
 
 def safe_int(value):
     try:
-        return int(value)
+        return int(float(value))
     except:
         return 0
 
@@ -19,23 +21,53 @@ def safe_float(value):
     except:
         return 0
 
-def parse_table(form, prefix, cols, rows):
-    """Convert the table input into a list of dicts"""
-    players = []
-    for i in range(rows):
-        player = {}
-        empty_row = True
-        for col in cols:
-            key = f"{prefix}_{col}_{i}"
-            val = form.get(key, "").strip()
-            if val != "":
-                empty_row = False
-            player[col] = val
-        if not empty_row:
-            players.append(player)
-    return players
+def parse_csv(file):
+    """Parse the uploaded CSV into 4 sections"""
+    my_hitters = []
+    my_pitchers = []
+    opp_hitters = []
+    opp_pitchers = []
+
+    # Read CSV into pandas
+    try:
+        # Support Excel as well
+        if file.filename.endswith(".xlsx"):
+            xls = pd.ExcelFile(file)
+            for sheet in xls.sheet_names:
+                df = xls.parse(sheet)
+                section = sheet.upper()
+                if "MY_HITTER" in section:
+                    my_hitters = df.to_dict(orient="records")
+                elif "MY_PITCHER" in section:
+                    my_pitchers = df.to_dict(orient="records")
+                elif "OPP_HITTER" in section:
+                    opp_hitters = df.to_dict(orient="records")
+                elif "OPP_PITCHER" in section:
+                    opp_pitchers = df.to_dict(orient="records")
+        else:
+            # CSV upload
+            df = pd.read_csv(file)
+            # Detect section column
+            if "SECTION" not in df.columns:
+                raise ValueError("CSV must have a 'SECTION' column as first column.")
+            for _, row in df.iterrows():
+                section = str(row["SECTION"]).strip().upper()
+                if section == "MY HITTERS":
+                    my_hitters.append(row.to_dict())
+                elif section == "MY PITCHERS":
+                    my_pitchers.append(row.to_dict())
+                elif section == "OPP HITTERS":
+                    opp_hitters.append(row.to_dict())
+                elif section == "OPP PITCHERS":
+                    opp_pitchers.append(row.to_dict())
+
+    except Exception as e:
+        raise ValueError(f"Error reading CSV/XLSX: {str(e)}")
+
+    return my_hitters, my_pitchers, opp_hitters, opp_pitchers
 
 def score_player(player, opp_pitcher=None):
+    """Simple hitter scoring formula"""
     avg = safe_float(player.get("Avg", 0))
     hr = safe_int(player.get("HR", 0))
     rbi = safe_int(player.get("RBI", 0))
@@ -61,18 +93,23 @@ def build_lineup(my_hitters, opp_pitchers):
 # Flask Route
 # -------------------------------
 
-@app.route("/", methods=["GET","POST"])
+@app.route("/", methods=["GET", "POST"])
 def index():
     lineup = None
     rotation = None
     error = None
-    form_data = request.form
+
     if request.method == "POST":
         try:
-            my_hitters = parse_table(form_data, "my_hitters", ["POS","Player","Avg","AB","Hits","SLG","RBI","2B","3B","HR","SB","BB","OBP"], 12)
-            my_pitchers = parse_table(form_data, "my_pitchers", ["Player","Win","Loss","Saves","ERA","WHIP","BAA","K","BB","Hits","Runs","IP"], 7)
-            opp_hitters = parse_table(form_data, "opp_hitters", ["POS","Name","Avg","Hits","HR","RBI","OBP"], 9)
-            opp_pitchers = parse_table(form_data, "opp_pitchers", ["Name","ERA","WHIP","K","BB"], 1)
+            if "stats_file" not in request.files:
+                raise ValueError("No file uploaded.")
+
+            file = request.files["stats_file"]
+            if file.filename == "":
+                raise ValueError("No file selected.")
+
+            # Parse the uploaded CSV/XLSX
+            my_hitters, my_pitchers, opp_hitters, opp_pitchers = parse_csv(file)
 
             if not my_hitters:
                 raise ValueError("No valid hitter stats found for your team.")
@@ -85,9 +122,9 @@ def index():
             rotation = sorted(my_pitchers, key=lambda p: safe_float(p.get("ERA", 99)))[:3]
 
         except Exception as e:
-            error = f"Error processing stats: {str(e)}"
+            error = f"Error processing file: {str(e)}"
 
-    return render_template("index.html", lineup=lineup, rotation=rotation, error=error, form_data=form_data)
+    return render_template("index.html", lineup=lineup, rotation=rotation, error=error)
 
 # -------------------------------
 # Run Flask
