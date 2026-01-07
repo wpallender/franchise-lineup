@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template
 from collections import defaultdict
-import pandas as pd
+import csv
+from openpyxl import load_workbook
 import io
 
 app = Flask(__name__)
@@ -22,47 +23,50 @@ def safe_float(value):
         return 0
 
 def parse_csv(file):
-    """Parse the uploaded CSV into 4 sections"""
+    """Parse the uploaded CSV or XLSX into 4 sections"""
     my_hitters = []
     my_pitchers = []
     opp_hitters = []
     opp_pitchers = []
 
-    # Read CSV into pandas
     try:
-        # Support Excel as well
         if file.filename.endswith(".xlsx"):
-            xls = pd.ExcelFile(file)
-            for sheet in xls.sheet_names:
-                df = xls.parse(sheet)
-                section = sheet.upper()
+            wb = load_workbook(filename=io.BytesIO(file.read()), data_only=True)
+            for sheet_name in wb.sheetnames:
+                ws = wb[sheet_name]
+                headers = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+                rows = list(ws.iter_rows(min_row=2, values_only=True))
+                section = sheet_name.upper()
+                data = [dict(zip(headers, row)) for row in rows]
+                
                 if "MY_HITTER" in section:
-                    my_hitters = df.to_dict(orient="records")
+                    my_hitters = data
                 elif "MY_PITCHER" in section:
-                    my_pitchers = df.to_dict(orient="records")
+                    my_pitchers = data
                 elif "OPP_HITTER" in section:
-                    opp_hitters = df.to_dict(orient="records")
+                    opp_hitters = data
                 elif "OPP_PITCHER" in section:
-                    opp_pitchers = df.to_dict(orient="records")
+                    opp_pitchers = data
+
         else:
-            # CSV upload
-            df = pd.read_csv(file)
-            # Detect section column
-            if "SECTION" not in df.columns:
-                raise ValueError("CSV must have a 'SECTION' column as first column.")
-            for _, row in df.iterrows():
+            # CSV file
+            file.stream.seek(0)
+            reader = csv.DictReader(io.StringIO(file.read().decode()))
+            if "SECTION" not in reader.fieldnames:
+                raise ValueError("CSV must have a 'SECTION' column.")
+            for row in reader:
                 section = str(row["SECTION"]).strip().upper()
                 if section == "MY HITTERS":
-                    my_hitters.append(row.to_dict())
+                    my_hitters.append(row)
                 elif section == "MY PITCHERS":
-                    my_pitchers.append(row.to_dict())
+                    my_pitchers.append(row)
                 elif section == "OPP HITTERS":
-                    opp_hitters.append(row.to_dict())
+                    opp_hitters.append(row)
                 elif section == "OPP PITCHERS":
-                    opp_pitchers.append(row.to_dict())
+                    opp_pitchers.append(row)
 
     except Exception as e:
-        raise ValueError(f"Error reading CSV/XLSX: {str(e)}")
+        raise ValueError(f"Error reading file: {str(e)}")
 
     return my_hitters, my_pitchers, opp_hitters, opp_pitchers
 
@@ -108,7 +112,6 @@ def index():
             if file.filename == "":
                 raise ValueError("No file selected.")
 
-            # Parse the uploaded CSV/XLSX
             my_hitters, my_pitchers, opp_hitters, opp_pitchers = parse_csv(file)
 
             if not my_hitters:
