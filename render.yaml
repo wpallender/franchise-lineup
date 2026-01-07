@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: franchise-lineup
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python app.py"
+    envVars:
+      PORT: 10000
+      # No need to set PYTHON_VERSION as environment variable; specify it below
+    pythonVersion: "3.12.17"
