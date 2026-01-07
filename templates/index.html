@@ -12,6 +12,12 @@
     <p style="color:red;">{{ error }}</p>
     {% endif %}
 
+    <h3>Download Template</h3>
+    <p>Click below to download the template CSV:</p>
+    <a href="{{ url_for('static', filename='files/FranchiseBall_Template_Sections.csv') }}" download>
+        Download FranchiseBall Template
+    </a>
+
     <form method="POST" enctype="multipart/form-data">
         <h3>Upload FranchiseBall Stats CSV</h3>
         <p>The CSV should have sections: MY HITTERS, MY PITCHERS, OPP HITTERS, OPP PITCHERS</p>
